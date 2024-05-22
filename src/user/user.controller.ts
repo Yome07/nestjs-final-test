@@ -14,6 +14,6 @@ export class UserController {
     @Post()
     @UsePipes(new ValidationPipe())
     async createUser(@Body() CreateUserDTO: CreateUserDTO) {
-        await this.userService.addUser(CreateUserDTO.email);
+        return await this.userService.addUser(CreateUserDTO.email);
     }
 }
