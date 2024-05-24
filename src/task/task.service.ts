@@ -5,7 +5,6 @@ import { CreateTaskDTO } from './dto/create-task.dto';
 
 @Injectable()
 export class TaskService {
-    successResponse: any;
     constructor(
         @InjectModel(Task)
         private taskModel: typeof Task,
@@ -14,44 +13,38 @@ export class TaskService {
     async addTask(
         name: string,
         userId: number,
-        priority: string | number,
+        priority: number,
     ): Promise<CreateTaskDTO> {
-        const priorityNumber =
-            typeof priority === 'string' ? parseInt(priority, 10) : priority;
-        if (isNaN(priorityNumber) || priorityNumber < 0) {
-            throw new Error('Invalid priority');
-        }
-
         const task = await this.taskModel.create({
             name,
             userId,
-            priority: priorityNumber,
+            priority,
         });
-        return {
-            id: task.taskId,
+        return await {
+            id: task.id,
             name: task.name,
             userId: task.userId,
             priority: task.priority,
         };
     }
 
-    getTaskByName(name: string): Promise<Task> {
-        return this.taskModel.findOne({
-            where: {
-                name,
-            },
-        });
+    async getUserTasks(userId: number): Promise<Task[]> {
+        if (userId) {
+            return this.taskModel.findAll({
+                where: { userId },
+            });
+        }
     }
 
-    async getUserTasks(userId: number): Promise<Task[]> {
-        return this.taskModel.findAll({
-            where: {
-                userId,
-            },
+    async getTaskByName(name: string): Promise<Task> {
+        return await this.taskModel.findOne({
+            where: { name },
         });
     }
 
     async resetData(): Promise<void> {
-        await this.taskModel.destroy({ where: {} });
+        await this.taskModel.destroy({
+            where: {},
+        });
     }
 }

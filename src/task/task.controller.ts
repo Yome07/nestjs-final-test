@@ -3,6 +3,7 @@ import {
     Body,
     Controller,
     Get,
+    InternalServerErrorException,
     Param,
     Post,
     UsePipes,
@@ -17,20 +18,30 @@ export class TaskController {
 
     @Get('user/:userId')
     async getUserTasks(@Param('userId') userId: string) {
-        const id = parseInt(userId, 10);
-        if (isNaN(id) || id <= 0) {
+        const numericUserId = parseInt(userId, 10);
+        if (isNaN(numericUserId) || numericUserId <= 0) {
             throw new BadRequestException('Invalid userId');
         }
-        return await this.taskService.getUserTasks(id);
+
+        try {
+            return await this.taskService.getUserTasks(numericUserId);
+        } catch (error) {
+            throw new InternalServerErrorException();
+        }
     }
 
     @Post()
     @UsePipes(new ValidationPipe())
-    async createTask(@Body() CreateTaskDTO: CreateTaskDTO) {
-        return await this.taskService.addTask(
-            CreateTaskDTO.name,
-            CreateTaskDTO.userId,
-            CreateTaskDTO.priority,
-        );
+    async createTask(@Body() createTaskDTO: CreateTaskDTO) {
+        try {
+            return await this.taskService.addTask(
+                createTaskDTO.name,
+                createTaskDTO.userId,
+                Number(createTaskDTO.priority),
+            );
+        } catch (error) {
+            console.error('Error creating task:', error);
+            throw new BadRequestException(error.message);
+        }
     }
 }
